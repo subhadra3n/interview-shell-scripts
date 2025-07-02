@@ -1,0 +1,30 @@
+#install aws cli
+
+
+#!/bin/bash
+
+echo "🔍 Fetching EC2 IP addresses across all AWS regions..."
+echo ""
+
+# Get all available AWS regions
+REGIONS=$(aws ec2 describe-regions --query 'Regions[*].RegionName' --output text)
+
+# Loop through each region
+for REGION in $REGIONS; do
+  echo "📍 Region: $REGION"
+
+  aws ec2 describe-instances \
+    --region "$REGION" \
+    --filters Name=instance-state-name,Values=running \
+    --query 'Reservations[*].Instances[*].{
+      Name: Tags[?Key==`Name`]|[0].Value,
+      InstanceId: InstanceId,
+      PublicIP: PublicIpAddress,
+      PrivateIP: PrivateIpAddress
+    }' \
+    --output table
+
+  echo ""
+done
+
+
